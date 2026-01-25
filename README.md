@@ -14,8 +14,8 @@ Our team achieved remarkable success in the CodeGuru competition:
 
 The team consisted of three members:
 - [Artemiy Pank](https://github.com/artemiypank) (me)
+- [Eduard Vodolazsky](https://github.com/EdikVodolazskii)
 - [Yuri Bimbat](https://github.com/Krilgon)
-- [Eduard Vodolazsky](https://github.com/ArtemiyHandel)
 
 ## Repository Contents
 

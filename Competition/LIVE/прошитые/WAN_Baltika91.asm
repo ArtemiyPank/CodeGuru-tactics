@@ -1,0 +1,384 @@
+VAR_SHIFT_CS equ -0x5
+VAR_SHIFT_CS_ZOMB_1 equ 0x3
+VAR_SHIFT_CS_ZOMB_2 equ 0x5
+
+VAR_BOMBING_AREA_SHIFT equ 0x6200
+VAR_BOMBING_AREA_SIZE equ 0x300
+
+VAR_BOMBING_AREA_SHIFT_ZOMB equ 0x3100
+
+BX_SHIFT_1 equ 0x40
+BX_SHIFT_2 equ 0x50
+BX_SHIFT_ZOMB_2 equ 0x50
+REP_SIZE equ 0x7
+
+COMP_SP_SHIFT equ VAR_BOMBING_AREA_SHIFT - VAR_BOMBING_AREA_SIZE
+COMP_SP_SHIFT_ZOMB equ VAR_BOMBING_AREA_SHIFT_ZOMB - VAR_BOMBING_AREA_SIZE
+
+COMP_CS_SHIFT equ VAR_SHIFT_CS*0x10
+COMP_NEW_CS equ 0x1000 + VAR_SHIFT_CS
+
+COMP_CS_SHIFT_ZOMB_1 equ VAR_SHIFT_CS_ZOMB_1*0x10
+COMP_NEW_CS_ZOMB_1 equ 0x1000 + VAR_SHIFT_CS_ZOMB_1
+
+COMP_CS_SHIFT_ZOMB_2 equ VAR_SHIFT_CS_ZOMB_2*0x10
+COMP_NEW_CS_ZOMB_2 equ 0x1000 + VAR_SHIFT_CS_ZOMB_2
+
+
+
+
+jmp hunt_zomb_1
+
+
+ADD SI, replicator
+    MOV CL, REP_SIZE + 2
+    REP MOVSW
+    MOV BX, BX_SHIFT_1 ; по BX будут лежать координаты прыжка call far 
+    MOV BP, VAR_BOMBING_AREA_SHIFT ; сдвиг бомбёжки
+    MOV DX, COMP_SP_SHIFT ; размер области бомбёжки
+    PUSH ES
+    POP DS
+    add ax, target - COMP_CS_SHIFT      
+    MOV [BX], AX ; записываем IP для target
+    MOV WORD [BX + 0x2], COMP_NEW_CS ; записываем будующий CS
+    call far [bx]
+    PUSH CS
+    POP ES
+    POP CX ; пропускаем 2 байта, чтобы добраться до CS, который в стек положил call far
+    POP SS
+    nop
+    nop;--------39
+    MOV AL, 0xA3 ; сдвигаемся на столбец A3
+    MOV [BX], AX ; записываем будующий IP
+    MOV SP, AX 
+    ADD SP, VAR_BOMBING_AREA_SIZE ; сдвигаем на размер облости бомбёжки
+    ; выставляем то, куда будем копировать
+    MOV DI, AX
+    MOV CX, REP_SIZE
+    mov si, jump_destination - replicator
+    movsw
+    DEC DI
+    XOR SI, SI 
+    JMP [BX]
+    REP MOVSW
+    SUB [BX], BP
+    SUB SP, DX
+    MOV DI, [BX]
+    movsw
+    XOR SI, SI
+    MOV CL, REP_SIZE
+    
+    nop;---------38
+    ;реальный старт------------------------------------тимоша
+
+
+hunt_zomb_1:
+    mov si, ax
+
+    lea bp, [si + united_zomb]
+
+
+  
+    mov dx, [0x1243]
+ 
+    mov ax, 0x0
+    push es
+    push cs
+    pop es
+
+    mov bx, 0x10e1
+    div bx
+
+    mov di, ax
+    mov [0x0], bp
+
+    mov ax, 0x24FF
+    mov dx, 0x24FF
+
+    INT 0x86
+    mov di, 0x0
+    nop;-------------------39
+    pop es
+    lea ax, [si + start_surv_2]
+    stosw
+    xor di, di
+
+    sub ax, start_surv_2
+
+    mov [0x0], word 0xCCCC  
+    
+
+    jmp core
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop;39-------------
+
+zomb_3:
+    mov ax, [si]
+     mov si, ax
+    MOV BP, VAR_BOMBING_AREA_SHIFT_ZOMB ; сдвиг бомбёжки
+    MOV DX, COMP_SP_SHIFT_ZOMB ; размер области бомбёжки
+
+    ADD SI, replicator - zomb_3; -------
+        MOV CL, REP_SIZE + 0x2
+        
+        xor di, di
+        push ss 
+        pop es
+
+        
+        REP MOVSW
+        ; свап сегментов
+        MOV BX, BX_SHIFT_ZOMB_2 ; по BX будут лежать координаты прыжка call far 
+
+      
+        PUSH ES
+        POP DS
+
+        
+        add ax, target - COMP_CS_SHIFT_ZOMB_2 - zomb_3; ------- 
+
+
+        MOV [BX], AX ; записываем target для IP
+        MOV WORD [BX + 0x2], COMP_NEW_CS_ZOMB_2 ; записываем будующий CS
+        nop
+        nop; 39-----
+        add ah, 0x12
+        
+        call far [bx]
+
+united_zomb:
+    mov ax, [si]
+
+
+    ;---
+    push cx
+    push ax
+    push es
+    std
+    
+    push cs
+    pop es
+    sub ax, united_zomb-zomb_3
+    mov [0x0], ax
+
+
+    mov ax, 0x0ffe
+    mov dx, 0xf9eb
+
+
+    mov cx, 0x24FF
+    mov bx, cx
+
+    int 0x87
+
+    xor di, di
+
+
+
+
+
+    cld
+    pop es
+
+    pop ax
+     pop cx
+    nop;39---
+    ;---
+    mov si, ax
+    MOV BP, VAR_BOMBING_AREA_SHIFT_ZOMB ; сдвиг бомбёжки
+    MOV DX, COMP_SP_SHIFT_ZOMB ; размер области бомбёжки
+
+    cmp cx, 0x0
+    jnz zomb1
+
+zomb2:
+    mov [0x0], byte 0xCC 
+        ADD SI, replicator - united_zomb; -------
+        MOV CL, REP_SIZE + 0x2
+        
+        xor di, di
+        push ss 
+        pop es
+
+        
+        REP MOVSW
+        ; свап сегментов
+        MOV BX, BX_SHIFT_ZOMB_2 ; по BX будут лежать координаты прыжка call far 
+
+      
+        PUSH ES
+        POP DS
+
+        
+        add ax, target - COMP_CS_SHIFT_ZOMB_2 - united_zomb; ------- 
+         nop ; 39 ---------
+
+        MOV [BX], AX ; записываем target для IP
+        MOV WORD [BX + 0x2], COMP_NEW_CS_ZOMB_2 ; записываем будующий CS
+        
+    mov_ax_axSurv2:
+        mov ax, 0x0
+
+        add ah, 0x6
+        
+        call far [bx]
+
+
+
+zomb1:
+
+    ADD SI, replicator- united_zomb
+    MOV CL, REP_SIZE + 2
+    REP MOVSW
+    
+
+    MOV BX, BX_SHIFT_1 ; по BX будут лежать координаты прыжка call far 
+    
+    ; свап сегментов
+    PUSH ES
+    POP DS
+
+
+    add ax, target - COMP_CS_SHIFT_ZOMB_1  - united_zomb      
+
+    MOV [BX], AX ; записываем IP для target
+    MOV WORD [BX + 0x2], COMP_NEW_CS_ZOMB_1 ; записываем будующий CS
+    nop;39------
+    add ah, 0x6
+    call far [bx]
+
+
+start_surv_2:
+    mov bx, [bp]
+    mov [bx + mov_ax_axSurv2+1 - start_surv_2], si
+    mov ax, bx
+    MOV BX, BX_SHIFT_2 ; по BX будут лежать координаты прыжка call far 
+    MOV BP, VAR_BOMBING_AREA_SHIFT ; сдвиг бомбёжки
+    MOV DX, COMP_SP_SHIFT ; размер области бомбёжки
+
+    mov sp, 0x200
+
+    ; свап сегментов
+    PUSH SS
+    POP DS
+
+
+    add ax, target - COMP_CS_SHIFT  - start_surv_2      
+
+    MOV [BX], AX ; записываем IP для target
+    MOV WORD [BX + 0x2], COMP_NEW_CS ; записываем будующий CS
+    nop
+    nop;39-----------
+    mov ax, si
+
+    call far [bx]
+
+
+
+
+core:  
+    ADD SI, replicator
+    MOV CL, REP_SIZE + 2
+    REP MOVSW
+    
+
+    MOV BX, BX_SHIFT_1 ; по BX будут лежать координаты прыжка call far 
+    MOV BP, VAR_BOMBING_AREA_SHIFT ; сдвиг бомбёжки
+    MOV DX, COMP_SP_SHIFT ; размер области бомбёжки
+
+    ; свап сегментов
+    PUSH ES
+    POP DS
+
+
+    add ax, target - COMP_CS_SHIFT      
+
+    MOV [BX], AX ; записываем IP для target
+    
+    MOV WORD [BX + 0x2], COMP_NEW_CS ; записываем будующий CS
+    call far [bx]
+nop
+nop
+nop
+nop;39-------
+    
+target:
+
+    PUSH CS
+    POP ES
+    
+    POP CX ; пропускаем 2 байта, чтобы добраться до CS, который в стек положил call far
+    POP SS
+   
+    
+    MOV AL, 0xA3 ; сдвигаемся на столбец A3
+    MOV [BX], AX ; записываем будующий IP
+
+
+    MOV SP, AX 
+    ADD SP, VAR_BOMBING_AREA_SIZE ; сдвигаем на размер облости бомбёжки
+    
+    ; выставляем то, куда будем копировать
+    MOV DI, AX
+    
+
+
+        
+
+    MOV CX, REP_SIZE
+    
+    mov si, jump_destination - replicator
+    
+    movsw
+    DEC DI
+
+    XOR SI, SI 
+
+    JMP [BX]
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop;39------------
+
+replicator:
+    REP MOVSW
+    
+    SUB [BX], BP
+    SUB SP, DX
+    MOV DI, [BX]
+    movsw
+
+    DEC DI
+    XOR SI, SI
+    MOV CL, REP_SIZE
+    JMP [bx]
+
+
+jump_destination:
+    call far [bx]
+    
+

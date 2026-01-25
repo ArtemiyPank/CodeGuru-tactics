@@ -1,0 +1,17 @@
+push cs
+pop es
+mov ax, 0x0000
+mov bx, 0x10e1
+mov [0x0], word 0xFEEB
+mov dx, [0x1243]
+
+div bx
+
+
+mov di, ax
+mov ax, 0xE7FF
+mov dx, 0xE7FF
+
+INT 0x86
+INT 0x86
+jmp $

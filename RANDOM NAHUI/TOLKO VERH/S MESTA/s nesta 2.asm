@@ -1,0 +1,87 @@
+VAR_SHIFT_CS equ 0xA5
+VAR_BOMBING_AREA_SIZE equ 0x600
+
+BX_SHIFT equ 0x40
+REP_SIZE equ 0x7
+
+COMP_SP_SHIFT equ -(VAR_BOMBING_AREA_SIZE)
+COMP_CS_SHIFT equ VAR_SHIFT_CS*0x10
+COMP_NEW_CS equ 0x1000 + VAR_SHIFT_CS
+
+
+main:
+    MOV SI, AX
+    ADD WORD SI, replicator
+    mov CX, REP_SIZE + 3
+    REP MOVSW
+    
+
+    MOV BX, BX_SHIFT ; по BX будут лежать координаты прыжка call far 
+    
+    
+    ; свап сегментов
+    PUSH ES
+    POP DS
+
+    add ax, target-COMP_CS_SHIFT      
+
+    MOV [BX], AX ; записываем IP для target
+    MOV WORD [BX + 0x2], COMP_NEW_CS ; записываем будующий CS
+    call far [bx]
+target:
+    PUSH CS
+    POP ES
+    
+    POP DX ; пропускаем 2 байта, чтобы добраться до CS, который в стек положил call far
+    POP SS
+   
+
+    mov ax, 0x80A9 ; сдвигаемся на столбец A3
+    
+    MOV [BX], AX ; записываем будующий IP
+   
+
+    
+    MOV DI, AX ; выставляем то, куда будем копировать
+    
+    MOV SP, DI 
+    sub WORD SP, VAR_BOMBING_AREA_SIZE - COMP_CS_SHIFT + 0x2; сдвигаем на размер облости бомбёжки
+    
+
+    MOV DX, COMP_SP_SHIFT; размер области бомбёжки
+        
+
+    MOV CL, REP_SIZE
+    
+    mov si, jump_destination - replicator
+    
+    movsw
+    movsw
+    
+    sub di, 0x3
+
+    XOR SI, SI 
+        
+    mov ax, 0x14
+    mov bp, 0x3
+    JMP [BX]
+
+replicator:
+    REP MOVSW
+
+    add SP, DX
+    
+    MOV DI, [BX]
+    
+    movsw
+    movsw
+    sub di, bp
+    XOR SI, SI
+    
+    MOV CL, REP_SIZE
+    JMP [bx]
+
+
+jump_destination:
+    add sp, ax
+    call far [bx]

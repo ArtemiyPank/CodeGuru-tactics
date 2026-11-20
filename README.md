@@ -10,7 +10,6 @@ For more information, visit the official website: [https://codeguru.co.il/Xtreme
 
 Our team achieved remarkable success in the CodeGuru competition:
 - **3rd place** in the All-Israel stage, competing against over 150 teams from across Israel.
-- **8th place** in the final round.
 
 The team consisted of three members:
 - [Artemiy Pank](https://github.com/artemiypank) (me)
